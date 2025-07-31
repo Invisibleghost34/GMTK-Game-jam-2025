@@ -1,6 +1,7 @@
 import pygame 
 from core.player import Player
 from core.maze_generator import *
+import pickle
 
 
 #constants 
@@ -14,9 +15,12 @@ def main():
     clock = pygame.time.Clock()
     
 
-    player = Player(0, 0, 30, 30)
-    cell = Cell(5,5)
+    player = Player(0, 0, 30, 140)
     DFS_backtracking(grid[0][0])
+    maze_data = save_maze(grid)
+    
+    with open('maze.pkl', 'wb') as file:
+        pickle.dump(maze_data, file)
     
 
 
