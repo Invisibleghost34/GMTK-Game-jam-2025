@@ -1,6 +1,7 @@
 import pygame 
 from core.player import Player
-from core.maze_generator import Cell
+from core.maze_generator import *
+
 
 #constants 
 FPS = 60 
@@ -14,8 +15,10 @@ def main():
     
 
     player = Player(0, 0, 30, 30)
-    cell = Cell(6,6)
-    cell.visited = True 
+    cell = Cell(5,5)
+    DFS_backtracking(grid[0][0])
+    
+
 
     while running:
         dt = clock.tick(FPS) / 1000 
@@ -23,12 +26,13 @@ def main():
             if event.type == pygame.QUIT:
                 running = False 
         screen.fill("blue")
+        draw_grid()
+    
 
-        
 
         player.input_manager(dt)
         player.render(screen)
-        cell.draw(screen)
+        
 
 
         pygame.display.flip()
