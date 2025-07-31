@@ -88,6 +88,62 @@ def draw_grid():
     for row in grid:
         for cell in row:
             cell.draw(screen)
+#Save the maze data 
+def save_maze(grid): 
+    data = []
+    for col in grid: 
+        row_data = []
+        for cell in col:
+            row_data.append({
+                'x': cell.x, 
+                'y': cell.y, 
+                'walls': cell.walls.copy()
+            })
+        data.append(row_data)
+    return data
+
+
+
+def pkl_to_matrix(maze_data):
+    rows = len(maze_data)
+    cols = len(maze_data[0])
+    matrix_size_x = rows * 2 + 1 
+    matrix_size_y = cols * 2 + 1 
+
+    matrix = [[1 for _ in range(matrix_size_y)] for _ in range(matrix_size_x)]
+
+    for x in range(cols):
+        for y in range(rows):
+            cell = maze_data[x][y]
+            mx, my = x*2 + 1, y*2 + 1
+
+            matrix[mx][my] = 0
+
+            if not cell['walls']['up'] and my >1: #We set the path walkable if there are no walls in the certain directions
+                matrix[mx][my - 1] = 0
+            if not cell['walls']['down'] and my +1 < matrix_size_y:
+                matrix[mx][my+1] = 0
+            if not cell['walls']['left'] and mx > 1:
+                matrix[mx-1][my] = 0
+            if not cell['walls']['right'] and mx + 1 < matrix_size_x:
+                matrix[mx+1][my] = 0
+    return matrix
+
+with open("maze.pkl", "rb") as fl: 
+    maze_data = pickle.load(fl)
+
+# for x in range(len(maze_data)):
+#     for y in range(len(maze_data[0])):
+#         cell = maze_data[x][y]
+#         print(f"Cell ({x}, {y}) walls: {cell['walls']}")
+
+matrix = pkl_to_matrix(maze_data)
+
+for row in matrix:
+    print("".join(['.' if x == 0 else '#' for x in row]))
+
+    
+
 
               
 
