@@ -1,5 +1,6 @@
 import pygame 
 from core.player import Player
+from core.maze_generator import Cell
 
 #constants 
 FPS = 60 
@@ -7,12 +8,14 @@ FPS = 60
 def main(): 
 
     pygame.init()
-    screen = pygame.display.set_mode((1280, 720))
+    screen = pygame.display.set_mode((600, 600))
     running = True 
     clock = pygame.time.Clock()
     
 
     player = Player(0, 0, 30, 30)
+    cell = Cell(6,6)
+    cell.visited = True 
 
     while running:
         dt = clock.tick(FPS) / 1000 
@@ -25,6 +28,8 @@ def main():
 
         player.input_manager(dt)
         player.render(screen)
+        cell.draw(screen)
+
 
         pygame.display.flip()
 
