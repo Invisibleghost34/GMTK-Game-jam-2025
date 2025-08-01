@@ -1,6 +1,7 @@
 import pygame 
 from core.player import Player
 from core.maze_generator import *
+from core.pathfinding import * 
 import pickle
 
 
@@ -18,7 +19,9 @@ def main():
     player = Player(0, 0, 30, 140)
     DFS_backtracking(grid[0][0])
     maze_data = save_maze(grid)
-    
+    enemy = Enemy(10,10,30,150)
+    pathfinder = Pathfinder(matrix)
+
     with open('maze.pkl', 'wb') as file:
         pickle.dump(maze_data, file)
     
@@ -31,7 +34,10 @@ def main():
                 running = False 
         screen.fill("blue")
         draw_grid()
-    
+        enemy.set_path(pathfinder.path)
+
+        enemy.update_position(dt)
+        enemy.draw_enemy(screen)
 
 
         player.input_manager(dt)
