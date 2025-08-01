@@ -4,9 +4,9 @@ import sys
 import heapq
 
 # Constants
-WIDTH, HEIGHT = 600, 600  # Window size
-ROWS, COLS = 20, 20       # Maze size
-TILE_SIZE = WIDTH // COLS  # Tile size to fit maze exactly in window
+WIDTH, HEIGHT = 600, 600
+ROWS, COLS = 20, 20
+TILE_SIZE = WIDTH // COLS
 FPS = 60
 
 # Colors
@@ -16,19 +16,23 @@ YELLOW = (255, 255, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+GREY = (200, 200, 200)
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Pacman Chase Game")
 clock = pygame.time.Clock()
 
+# Control scheme
+control_scheme = "arrows"  # "arrows" or "wasd"
+
+# ------------------ MAZE GENERATION ------------------ #
 def generate_maze(rows, cols):
     grid = [[0 for _ in range(cols)] for _ in range(rows)]
     for r in range(rows):
         for c in range(cols):
-            # Avoid blocking start and end tiles
             if random.random() < 0.2 and (r, c) not in [(0, 0), (rows - 1, cols - 1)]:
-                grid[r][c] = 1  # wall
+                grid[r][c] = 1
     return grid
 
 def draw_maze(grid):
@@ -37,9 +41,8 @@ def draw_maze(grid):
             rect = pygame.Rect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE)
             if grid[r][c] == 1:
                 pygame.draw.rect(screen, BLACK, rect)
-            else:
-                pygame.draw.rect(screen, BLUE, rect)  # floor color
 
+# ------------------ PLAYER & PILL ------------------ #
 class Player:
     def __init__(self, row, col, color):
         self.row = row
@@ -51,7 +54,7 @@ class Player:
         new_row = self.row + dy
         new_col = self.col + dx
         if 0 <= new_row < ROWS and 0 <= new_col < COLS:
-            if grid[new_row][new_col] == 0:  # free cell
+            if grid[new_row][new_col] == 0:
                 self.row = new_row
                 self.col = new_col
                 self.rect.topleft = (self.col * TILE_SIZE, self.row * TILE_SIZE)
@@ -72,7 +75,7 @@ class Pill:
     def draw(self):
         pygame.draw.rect(screen, GREEN, self.rect)
 
-# A* Algorithm for pathfinding
+# ------------------ PATHFINDING ------------------ #
 def a_star(grid, start, goal):
     def heuristic(a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
@@ -110,23 +113,104 @@ def a_star(grid, start, goal):
     path.reverse()
     return path
 
+# ------------------ SCORE ------------------ #
 def draw_score(score):
     font = pygame.font.SysFont(None, 30)
     text = font.render(f"Ghosts Caught: {score}", True, BLACK)
     screen.blit(text, (10, 10))
 
+# ------------------ OPTIONS MENU ------------------ #
+def options_menu():
+    global control_scheme
+    font_title = pygame.font.SysFont(None, 60)
+    font_button = pygame.font.SysFont(None, 40)
+
+    arrows_button = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 - 60, 200, 50)
+    wasd_button = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 + 10, 200, 50)
+
+    while True:
+        screen.fill(WHITE)
+        title_text = font_title.render("Options", True, BLACK)
+        screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, 150))
+
+        pygame.draw.rect(screen, GREY, arrows_button)
+        pygame.draw.rect(screen, GREY, wasd_button)
+
+        arrows_text = font_button.render("Arrow Keys", True, BLACK)
+        wasd_text = font_button.render("WASD Keys", True, BLACK)
+
+        screen.blit(arrows_text, (arrows_button.x + 30, arrows_button.y + 10))
+        screen.blit(wasd_text, (wasd_button.x + 40, wasd_button.y + 10))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if arrows_button.collidepoint(event.pos):
+                    control_scheme = "arrows"
+                    return
+                elif wasd_button.collidepoint(event.pos):
+                    control_scheme = "wasd"
+                    return
+
+# ------------------ START MENU ------------------ #
+def start_menu():
+    font_title = pygame.font.SysFont(None, 80)
+    font_button = pygame.font.SysFont(None, 40)
+
+    start_button = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 - 90, 200, 50)
+    options_button = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 - 20, 200, 50)
+    exit_button = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 + 50, 200, 50)
+
+    while True:
+        screen.fill(WHITE)
+
+        title_text = font_title.render("GAME", True, BLACK)
+        screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, 150))
+
+        pygame.draw.rect(screen, GREY, start_button)
+        pygame.draw.rect(screen, GREY, options_button)
+        pygame.draw.rect(screen, GREY, exit_button)
+
+        start_text = font_button.render("Start Game", True, BLACK)
+        options_text = font_button.render("Options", True, BLACK)
+        exit_text = font_button.render("Exit Game", True, BLACK)
+        screen.blit(start_text, (start_button.x + 40, start_button.y + 10))
+        screen.blit(options_text, (options_button.x + 60, options_button.y + 10))
+        screen.blit(exit_text, (exit_button.x + 50, exit_button.y + 10))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if start_button.collidepoint(event.pos):
+                    return
+                elif options_button.collidepoint(event.pos):
+                    options_menu()
+                elif exit_button.collidepoint(event.pos):
+                    pygame.quit()
+                    sys.exit()
+
+# ------------------ MAIN GAME ------------------ #
 def main():
     grid = generate_maze(ROWS, COLS)
-
     player = Player(0, 0, YELLOW)
     ghost = Player(ROWS - 1, COLS - 1, RED)
     pill = Pill(grid)
 
     score = 0
-    ghost_speed = 0.25  # tiles per frame (slower start)
+    ghost_speed = 0.25
     normal_player_speed = 0.25
-    powered_player_speed = normal_player_speed * 4  # 4× normal speed when powered
+    powered_player_speed = normal_player_speed * 4
     player_speed = normal_player_speed
+
     is_powered = False
     powered_timer = 0
 
@@ -135,25 +219,32 @@ def main():
 
     running = True
     while running:
-        dt = clock.tick(FPS) / 1000  # seconds passed since last frame
+        dt = clock.tick(FPS) / 1000
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
         keys = pygame.key.get_pressed()
+
+        # Determine movement keys based on control scheme
+        if control_scheme == "arrows":
+            up_key, down_key, left_key, right_key = pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT
+        else:
+            up_key, down_key, left_key, right_key = pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d
+
         player_move_accumulator += dt * player_speed * 10
         ghost_move_accumulator += dt * ghost_speed * 10
 
         if player_move_accumulator >= 1:
             dx, dy = 0, 0
-            if keys[pygame.K_UP]:
+            if keys[up_key]:
                 dy = -1
-            elif keys[pygame.K_DOWN]:
+            elif keys[down_key]:
                 dy = 1
-            elif keys[pygame.K_LEFT]:
+            elif keys[left_key]:
                 dx = -1
-            elif keys[pygame.K_RIGHT]:
+            elif keys[right_key]:
                 dx = 1
 
             if dx != 0 or dy != 0:
@@ -172,7 +263,7 @@ def main():
         if pill and player.rect.colliderect(pill.rect):
             is_powered = True
             powered_timer = pygame.time.get_ticks()
-            player_speed = powered_player_speed  # much faster now
+            player_speed = powered_player_speed
             pill = None
 
         if is_powered and pygame.time.get_ticks() - powered_timer > 5000:
@@ -193,7 +284,12 @@ def main():
                 print(f"Game Over. Total ghosts caught: {score}")
                 running = False
 
-        screen.fill(WHITE)
+        # Change background color based on powered mode
+        if is_powered:
+            screen.fill(BLUE)
+        else:
+            screen.fill(WHITE)
+
         draw_maze(grid)
         if pill:
             pill.draw()
@@ -206,5 +302,7 @@ def main():
     pygame.quit()
     sys.exit()
 
+# ------------------ RUN GAME ------------------ #
 if __name__ == '__main__':
+    start_menu()
     main()
