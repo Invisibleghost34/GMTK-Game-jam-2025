@@ -37,7 +37,8 @@ def main():
     player = Player(0, 0, YELLOW)
     ghost = Player(ROWS - 1, COLS - 1, RED)
     pill = Pill(grid)
-
+    
+    print(grid)
     score = 0
     ghost_speed = 0.25
     normal_player_speed = 0.25
