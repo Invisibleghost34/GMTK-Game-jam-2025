@@ -13,6 +13,7 @@ FPS = 60
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
+CYAN = (0, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
@@ -31,7 +32,11 @@ def generate_maze(rows, cols):
     grid = [[0 for _ in range(cols)] for _ in range(rows)]
     for r in range(rows):
         for c in range(cols):
-            if random.random() < 0.2 and (r, c) not in [(0, 0), (rows - 1, cols - 1)]:
+            # Outer wall boundary
+            if r == 0 or r == rows - 1 or c == 0 or c == cols - 1:
+                grid[r][c] = 1
+            # Random inner walls
+            elif random.random() < 0.2 and (r, c) not in [(1, 1), (rows - 2, cols - 2)]:
                 grid[r][c] = 1
     return grid
 
@@ -65,9 +70,9 @@ class Player:
 class Pill:
     def __init__(self, grid):
         while True:
-            r = random.randint(0, ROWS - 1)
-            c = random.randint(0, COLS - 1)
-            if grid[r][c] == 0 and (r, c) not in [(0, 0), (ROWS-1, COLS-1)]:
+            r = random.randint(1, ROWS - 2)
+            c = random.randint(1, COLS - 2)
+            if grid[r][c] == 0 and (r, c) not in [(1, 1), (ROWS-2, COLS-2)]:
                 self.row, self.col = r, c
                 break
         self.rect = pygame.Rect(self.col * TILE_SIZE, self.row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
@@ -201,8 +206,8 @@ def start_menu():
 # ------------------ MAIN GAME ------------------ #
 def main():
     grid = generate_maze(ROWS, COLS)
-    player = Player(0, 0, YELLOW)
-    ghost = Player(ROWS - 1, COLS - 1, RED)
+    player = Player(1, 1, YELLOW)
+    ghost = Player(ROWS - 2, COLS - 2, RED)
     pill = Pill(grid)
 
     score = 0
@@ -251,7 +256,7 @@ def main():
                 player.move(dx, dy, grid)
                 player_move_accumulator = 0
 
-        ghost_target = (player.row, player.col) if not is_powered else (ROWS - 1, COLS - 1)
+        ghost_target = (player.row, player.col) if not is_powered else (ROWS - 2, COLS - 2)
         path = a_star(grid, (ghost.row, ghost.col), ghost_target)
 
         if path and ghost_move_accumulator >= 1:
@@ -264,11 +269,13 @@ def main():
             is_powered = True
             powered_timer = pygame.time.get_ticks()
             player_speed = powered_player_speed
+            player.color = CYAN  # Change player color when powered
             pill = None
 
         if is_powered and pygame.time.get_ticks() - powered_timer > 5000:
             is_powered = False
             player_speed = normal_player_speed
+            player.color = YELLOW  # Reset color when power ends
             if pill is None:
                 pill = Pill(grid)
 
@@ -276,15 +283,16 @@ def main():
             if is_powered:
                 score += 1
                 ghost_speed += 0.1
-                ghost = Player(ROWS - 1, COLS - 1, RED)
+                ghost = Player(ROWS - 2, COLS - 2, RED)
                 pill = Pill(grid)
                 is_powered = False
                 player_speed = normal_player_speed
+                player.color = YELLOW
             else:
                 print(f"Game Over. Total ghosts caught: {score}")
                 running = False
 
-        # Change background color based on powered mode
+        # Background color change
         if is_powered:
             screen.fill(BLUE)
         else:
