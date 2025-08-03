@@ -212,7 +212,7 @@ def main():
 
     score = 0
     ghost_speed = 0.25
-    normal_player_speed = 0.25
+    normal_player_speed = 1
     powered_player_speed = normal_player_speed * 4
     player_speed = normal_player_speed
 
